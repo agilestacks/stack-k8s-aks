@@ -35,5 +35,5 @@ resource "azurerm_dns_cname_record" "api" {
   zone_name           = "${azurerm_dns_zone.main.name}"
   resource_group_name = "${var.resource_group_name}"
   ttl                 = 60
-  record              = "${azurerm_kubernetes_cluster.k8s.kube_config.0.host}"
+  record              = "${azurerm_kubernetes_cluster.k8s.fqdn}"
 }
