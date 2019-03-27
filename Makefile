@@ -13,6 +13,8 @@ export TF_VAR_client_id := $(ARM_CLIENT_ID)
 export TF_VAR_client_secret := $(ARM_CLIENT_SECRET)
 
 export TF_VAR_agent_count ?= 2
+export TF_VAR_agent_vm_size ?= Standard_DS1_v2
+export TF_VAR_agent_vm_os ?= Linux
 export TF_VAR_resource_group_name ?= superhub
 export TF_VAR_location ?= eastus
 export TF_VAR_log_analytics_workspace_location ?= eastus
@@ -27,7 +29,7 @@ TFPLAN := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 
 terraform   ?= terraform-v0.11
 
-deploy: init plan apply
+deploy: init plan apply output
 
 init:
 	@mkdir -p $(TF_DATA_DIR)
@@ -49,6 +51,14 @@ plan:
 apply:
 	$(terraform) apply $(TF_CLI_ARGS) -Xshadow=false $(TFPLAN)
 .PHONY: apply
+
+output:
+	@echo
+	@echo Outputs:
+	@echo dns_name = $(NAME)
+	@echo dns_base_domain = $(BASE_DOMAIN)
+	@echo
+.PHONY: output
 
 destroy: TF_CLI_ARGS:=-destroy $(TF_CLI_ARGS)
 destroy: plan
