@@ -16,6 +16,8 @@ export TF_VAR_agent_count ?= 2
 export TF_VAR_resource_group_name ?= superhub
 export TF_VAR_location ?= eastus
 export TF_VAR_log_analytics_workspace_location ?= eastus
+export TF_VAR_base_domain := $(BASE_DOMAIN)
+export TF_VAR_name := $(NAME)
 
 export TF_LOG      ?= info
 export TF_DATA_DIR ?= .terraform/$(DOMAIN_NAME)

@@ -1,6 +1,9 @@
 variable "client_id" {}
 variable "client_secret" {}
 
+variable "name" {}
+variable "base_domain" {}
+
 variable "agent_count" {
   default = 2
 }
@@ -27,10 +30,6 @@ variable location {
 
 variable log_analytics_workspace_name {
   default = "k8s-logs-43424234432"
-}
-
-variable log_analytics_workspace_location {
-  default = "eastus"
 }
 
 variable log_analytics_workspace_sku {
