@@ -24,7 +24,7 @@ export TF_VAR_name := $(NAME)
 export TF_LOG      ?= info
 export TF_DATA_DIR ?= .terraform/$(DOMAIN_NAME)
 export TF_LOG_PATH ?= $(TF_DATA_DIR)/terraform.log
-TF_CLI_ARGS := -no-color -input=false
+TF_CLI_ARGS := -no-color -input=false -lock=false
 TFPLAN := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 
 terraform   ?= terraform-v0.11
