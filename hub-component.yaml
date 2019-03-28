@@ -8,7 +8,7 @@ meta:
       dir: ../../stack-k8s-aks/
 
 provides:
-  - kubectl
+  - kubernetes
 
 lifecycle:
   verbs:
@@ -20,7 +20,7 @@ lifecycle:
 
 parameters:
   - name: kubernetes.flavor
-    value: k8s-aws
+    value: k8s-aks
   - name: cloud.kind
     value: azure  
   - name: terraform.account.name
