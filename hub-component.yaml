@@ -7,6 +7,8 @@ meta:
   source:
       dir: ../../stack-k8s-aks/
 
+requires:
+  - azure
 provides:
   - kubernetes
 
@@ -22,11 +24,7 @@ parameters:
   - name: kubernetes.flavor
     value: k8s-aks
   - name: cloud.kind
-    value: azure  
-  - name: terraform.account.name
-    env: STATE_ACCOUNT
-  - name: terraform.account.container
-    env: STATE_CONTAINER
+    value: azure
   - name: dns.domain
     env: DOMAIN_NAME
   - name: cloud.region
@@ -63,11 +61,11 @@ outputs:
   - name: kubernetes.api.endpoint
     value: ${kubernetes.api.host}:${kubernetes.api.port} 
   - name: kubernetes.api.caCert
-    fromTfVar: cluster_ca_certificate
+    fromTfVar: api_ca_crt
   - name: kubernetes.api.clientCert
-    fromTfVar: client_certificate
+    fromTfVar: api_client_crt
   - name: kubernetes.api.clientKey
-    fromTfVar: client_key
+    fromTfVar: api_client_key
 
 
 

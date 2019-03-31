@@ -1,25 +1,13 @@
-output "client_key" {
-  value = "${azurerm_kubernetes_cluster.k8s.kube_config.0.client_key}"
+output "api_ca_crt" {
+  value = "file://${local_file.cluster_ca_certificate.filename}"
 }
 
-output "client_certificate" {
-  value = "${azurerm_kubernetes_cluster.k8s.kube_config.0.client_certificate}"
+output "api_client_crt" {
+  value = "file://${local_file.client_certificate.filename}"
 }
 
-output "cluster_ca_certificate" {
-  value = "${azurerm_kubernetes_cluster.k8s.kube_config.0.cluster_ca_certificate}"
-}
-
-output "cluster_username" {
-  value = "${azurerm_kubernetes_cluster.k8s.kube_config.0.username}"
-}
-
-output "cluster_password" {
-  value = "${azurerm_kubernetes_cluster.k8s.kube_config.0.password}"
-}
-
-output "kube_config" {
-  value = "${azurerm_kubernetes_cluster.k8s.kube_config_raw}"
+output "api_client_key" {
+  value = "file://${local_file.client_key.filename}"
 }
 
 output "host" {

@@ -60,3 +60,18 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     Environment = "Development"
   }
 }
+
+resource "local_file" "client_key" {
+  content  = "${base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.client_key)}"
+  filename = "${path.cwd}/.terraform/${var.name}.${var.base_domain}/client_key.pem"
+}
+
+resource "local_file" "client_certificate" {
+  content  = "${base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.client_certificate)}"
+  filename = "${path.cwd}/.terraform/${var.name}.${var.base_domain}/client_certificate.pem"
+}
+
+resource "local_file" "cluster_ca_certificate" {
+  content  = "${base64decode(azurerm_kubernetes_cluster.k8s.kube_config.0.cluster_ca_certificate)}"
+  filename = "${path.cwd}/.terraform/${var.name}.${var.base_domain}/cluster_ca_certificate.pem"
+}

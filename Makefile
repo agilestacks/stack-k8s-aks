@@ -6,8 +6,7 @@ COMPONENT_NAME ?= stack-k8s-aks
 NAME           := $(shell echo $(DOMAIN_NAME) | cut -d. -f1)
 BASE_DOMAIN    := $(shell echo $(DOMAIN_NAME) | cut -d. -f2-)
 
-STATE_ACCOUNT ?= viktors
-STATE_CONTAINER   ?= terraformagilestacks
+STATE_CONTAINER ?= agilestacks
 
 export TF_VAR_client_id := $(ARM_CLIENT_ID)
 export TF_VAR_client_secret := $(ARM_CLIENT_SECRET)
@@ -15,7 +14,7 @@ export TF_VAR_client_secret := $(ARM_CLIENT_SECRET)
 export TF_VAR_agent_count ?= 2
 export TF_VAR_agent_vm_size ?= Standard_DS1_v2
 export TF_VAR_agent_vm_os ?= Linux
-export TF_VAR_resource_group_name ?= superhub
+export TF_VAR_resource_group_name ?= SuperHub
 export TF_VAR_location ?= eastus
 export TF_VAR_log_analytics_workspace_location ?= eastus
 export TF_VAR_base_domain := $(BASE_DOMAIN)
@@ -34,17 +33,17 @@ deploy: init plan apply output
 init:
 	@mkdir -p $(TF_DATA_DIR)
 	$(terraform) init -get=true $(TF_CLI_ARGS) -reconfigure -force-copy \
-		-backend-config="storage_account_name=$(STATE_ACCOUNT)" \
+		-backend-config="storage_account_name=$${BASE_DOMAIN//./}" \
 		-backend-config="container_name=$(STATE_CONTAINER)" \
-		-backend-config="access_key=$(STORAGE_ACCOUNT_KEY)" \
+		-backend-config="resource_group_name=SuperHub" \
 		-backend-config="key=$(DOMAIN_NAME)/$(COMPONENT_NAME)/terraform.tfstate"
 .PHONY: init
 
 plan:
 	$(terraform) plan $(TF_CLI_ARGS) \
-	-var dns_prefix=$${DOMAIN_NAME//./-} \
-	-var cluster_name=$${DOMAIN_NAME//./-} \
-	-var log_analytics_workspace_name=$${DOMAIN_NAME//./-}-ws \
+	-var dns_prefix=$${DOMAIN_NAME//./} \
+	-var cluster_name=$${DOMAIN_NAME//./} \
+	-var log_analytics_workspace_name=$${DOMAIN_NAME//./}-ws \
 	-refresh=true -module-depth=-1 -out=$(TFPLAN)
 .PHONY: plan	
 
