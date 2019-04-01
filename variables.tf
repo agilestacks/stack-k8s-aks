@@ -11,6 +11,10 @@ variable resource_group_name {}
 variable location {}
 variable log_analytics_workspace_name {}
 
+variable k8s_version {
+  default = ""
+}
+
 variable "ssh_public_key" {
   default = "~/.ssh/id_rsa.pub"
 }

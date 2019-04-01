@@ -7,6 +7,8 @@ NAME           := $(shell echo $(DOMAIN_NAME) | cut -d. -f1)
 BASE_DOMAIN    := $(shell echo $(DOMAIN_NAME) | cut -d. -f2-)
 
 STATE_CONTAINER ?= agilestacks
+STATE_BUCKET ?= azure.dev.superhub.io
+STATE_REGION ?= not-used
 
 export TF_VAR_client_id := $(ARM_CLIENT_ID)
 export TF_VAR_client_secret := $(ARM_CLIENT_SECRET)
@@ -19,6 +21,7 @@ export TF_VAR_location ?= eastus
 export TF_VAR_log_analytics_workspace_location ?= eastus
 export TF_VAR_base_domain := $(BASE_DOMAIN)
 export TF_VAR_name := $(NAME)
+export TF_VAR_k8s_version ?= 
 
 export TF_LOG      ?= info
 export TF_DATA_DIR ?= .terraform/$(DOMAIN_NAME)
@@ -33,9 +36,9 @@ deploy: init plan apply output
 init:
 	@mkdir -p $(TF_DATA_DIR)
 	$(terraform) init -get=true $(TF_CLI_ARGS) -reconfigure -force-copy \
-		-backend-config="storage_account_name=$${BASE_DOMAIN//./}" \
+		-backend-config="storage_account_name=$${STATE_BUCKET//./}" \
 		-backend-config="container_name=$(STATE_CONTAINER)" \
-		-backend-config="resource_group_name=SuperHub" \
+		-backend-config="resource_group_name=$(TF_VAR_resource_group_name)" \
 		-backend-config="key=$(DOMAIN_NAME)/$(COMPONENT_NAME)/terraform.tfstate"
 .PHONY: init
 

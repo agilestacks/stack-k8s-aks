@@ -32,6 +32,11 @@ parameters:
   - name: cloud.resource_group
     env: TF_VAR_resource_group_name
 
+  - name: terraform.bucket.name
+    env: STATE_BUCKET
+  - name: terraform.bucket.region
+    env: STATE_REGION
+
   - name: component.kubernetes
     parameters:
     - name: aks
@@ -44,6 +49,8 @@ parameters:
       - name: agent_vm_os
         env: TF_VAR_agent_vm_os
         value: Linux
+      - name: version
+        env: TF_VAR_k8s_version  
 
 outputs:
   - name: cloud.kind

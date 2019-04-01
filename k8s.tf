@@ -27,6 +27,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   location            = "${var.location}"
   resource_group_name = "${data.azurerm_resource_group.k8s.name}"
   dns_prefix          = "${var.dns_prefix}"
+  kubernetes_version  = "${var.k8s_version}"
 
   linux_profile {
     admin_username = "ubuntu"
