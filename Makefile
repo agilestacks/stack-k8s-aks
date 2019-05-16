@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 .DEFAULT_GOAL := deploy
 
 DOMAIN_NAME    ?= superaks.azure.dev.superhub.io
@@ -20,8 +21,8 @@ export TF_VAR_resource_group_name ?= SuperHub
 export TF_VAR_location ?= eastus
 export TF_VAR_log_analytics_workspace_location ?= eastus
 export TF_VAR_base_domain := $(BASE_DOMAIN)
+export TF_VAR_cluster_name := $(CLUSTER_NAME)
 export TF_VAR_name := $(NAME)
-export TF_VAR_k8s_version ?= 
 
 export TF_LOG      ?= info
 export TF_DATA_DIR ?= .terraform/$(DOMAIN_NAME)
@@ -30,8 +31,10 @@ TF_CLI_ARGS := -no-color -input=false -lock=false
 TFPLAN := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 
 terraform   ?= terraform-v0.11
+az ?= az
+kubectl ?= kubectl
 
-deploy: init plan apply output
+deploy: init plan apply createsa token output
 
 init:
 	@mkdir -p $(TF_DATA_DIR)
@@ -45,24 +48,47 @@ init:
 plan:
 	$(terraform) plan $(TF_CLI_ARGS) \
 	-var dns_prefix=$${DOMAIN_NAME//./} \
-	-var cluster_name=$${DOMAIN_NAME//./} \
 	-var log_analytics_workspace_name=$${DOMAIN_NAME//./}-ws \
 	-refresh=true -module-depth=-1 -out=$(TFPLAN)
-.PHONY: plan	
+.PHONY: plan
 
 apply:
 	$(terraform) apply $(TF_CLI_ARGS) -Xshadow=false $(TFPLAN)
 .PHONY: apply
+
+context:
+	$(az) aks get-credentials --resource-group $(TF_VAR_resource_group_name) --name $(TF_VAR_cluster_name)
+.PHONY: context
+
+createsa: context
+	@if $(kubectl) get -n default serviceaccount $(SERVICE_ACCOUNT) ; then \
+		echo "Service Account $(SERVICE_ACCOUNT) exists"; \
+	else \
+		$(kubectl) create -n default serviceaccount $(SERVICE_ACCOUNT); \
+		$(kubectl) create clusterrolebinding $(SERVICE_ACCOUNT)-cluster-admin-binding \
+			--clusterrole=cluster-admin --serviceaccount=default:$(SERVICE_ACCOUNT); \
+	fi
+	@sleep 10s
+.PHONY: createsa
+
+token:
+	$(eval SECRET=$(shell $(kubectl) get serviceaccount $(SERVICE_ACCOUNT) -o json | \
+		jq '.secrets[] | select(.name | contains("token")).name'))
+	$(eval TOKEN_BASE64=$(shell $(kubectl) get secret $(SECRET) -o json | \
+		jq '.data.token'))
+	$(eval TOKEN=$(shell openssl enc -A -base64 -d <<< $(TOKEN_BASE64)))
+.PHONY: token
 
 output:
 	@echo
 	@echo Outputs:
 	@echo dns_name = $(NAME)
 	@echo dns_base_domain = $(BASE_DOMAIN)
+	@echo token = $(TOKEN)
 	@echo
 .PHONY: output
 
 destroy: TF_CLI_ARGS:=-destroy $(TF_CLI_ARGS)
 destroy: plan
 
-undeploy: init destroy apply	
+undeploy: init destroy apply
