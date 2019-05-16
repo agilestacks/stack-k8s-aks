@@ -17,9 +17,10 @@ resource "azurerm_dns_ns_record" "parent" {
 }
 
 resource "azurerm_dns_zone" "internal" {
-  name                = "i.${var.name}.${data.azurerm_dns_zone.base.name}"
-  resource_group_name = "${var.resource_group_name}"
-  zone_type           = "Private"
+  name                           = "i.${var.name}.${data.azurerm_dns_zone.base.name}"
+  resource_group_name            = "${var.resource_group_name}"
+  zone_type                      = "Private"
+  resolution_virtual_network_ids = ["${azurerm_virtual_network.k8s.id}"]
 }
 
 resource "azurerm_dns_ns_record" "internal" {
