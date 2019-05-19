@@ -11,8 +11,8 @@ STATE_CONTAINER ?= agilestacks
 STATE_BUCKET ?= azure.dev.superhub.io
 STATE_REGION ?= not-used
 
-export TF_VAR_client_id := $(ARM_CLIENT_ID)
-export TF_VAR_client_secret := $(ARM_CLIENT_SECRET)
+export TF_VAR_client_id := $(AZURE_CLIENT_ID)
+export TF_VAR_client_secret := $(AZURE_CLIENT_SECRET)
 
 export TF_VAR_agent_count ?= 2
 export TF_VAR_agent_vm_size ?= Standard_DS1_v2
@@ -33,6 +33,11 @@ TFPLAN := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 terraform   ?= terraform-v0.11
 az ?= az
 kubectl ?= kubectl
+
+export ARM_CLIENT_ID=$(AZURE_CLIENT_ID)
+export ARM_CLIENT_SECRET=$(AZURE_CLIENT_SECRET)
+export ARM_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
+export ARM_TENANT_ID=$(AZURE_TENANT_ID)
 
 deploy: init plan apply createsa token output
 
