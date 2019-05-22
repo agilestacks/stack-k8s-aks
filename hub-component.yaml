@@ -57,6 +57,7 @@ parameters:
         value: Linux
       - name: version
         env: TF_VAR_k8s_version
+        empty: allow
       - name: agentSshPubKey
         env: TF_VAR_ssh_public_key
       - name: virtualNodes

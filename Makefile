@@ -73,7 +73,6 @@ createsa: context
 		$(kubectl) create clusterrolebinding $(SERVICE_ACCOUNT)-cluster-admin-binding \
 			--clusterrole=cluster-admin --serviceaccount=default:$(SERVICE_ACCOUNT); \
 	fi
-	@sleep 10s
 .PHONY: createsa
 
 token:
