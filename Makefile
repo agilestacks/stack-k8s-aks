@@ -44,7 +44,7 @@ deploy: k8sversion init plan apply createsa token output
 k8sversion:
 	$(eval K8S_LATEST_VERSION=$(shell $(az) aks get-versions  \
 		--location $(TF_VAR_location) | jq '.orchestrators[-1].orchestratorVersion'))
-.PHONY: context
+.PHONY: k8sversion
 
 init:
 	@mkdir -p $(TF_DATA_DIR)
