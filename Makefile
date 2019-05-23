@@ -39,7 +39,12 @@ export ARM_CLIENT_SECRET=$(AZURE_CLIENT_SECRET)
 export ARM_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
 export ARM_TENANT_ID=$(AZURE_TENANT_ID)
 
-deploy: init plan apply createsa token output
+deploy: k8sversion init plan apply createsa token output
+
+k8sversion:
+	$(eval K8S_LATEST_VERSION=$(shell $(az) aks get-versions  \
+		--location $(TF_VAR_location) | jq '.orchestrators[-1].orchestratorVersion'))
+.PHONY: context
 
 init:
 	@mkdir -p $(TF_DATA_DIR)
@@ -53,6 +58,7 @@ init:
 plan:
 	$(terraform) plan $(TF_CLI_ARGS) \
 	-var dns_prefix=$${DOMAIN_NAME//./} \
+	-var k8s_default_version=$(K8S_LATEST_VERSION) \
 	-var log_analytics_workspace_name=$${DOMAIN_NAME//./}-ws \
 	-refresh=true -module-depth=-1 -out=$(TFPLAN)
 .PHONY: plan

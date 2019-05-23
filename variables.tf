@@ -12,9 +12,8 @@ variable location {}
 variable log_analytics_workspace_name {}
 variable virtual_nodes {}
 
-variable k8s_version {
-  default = ""
-}
+variable k8s_version {}
+variable k8s_default_version {}
 
 variable "ssh_public_key" {}
 

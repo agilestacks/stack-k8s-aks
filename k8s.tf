@@ -41,8 +41,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   location            = "${var.location}"
   resource_group_name = "${data.azurerm_resource_group.k8s.name}"
   dns_prefix          = "${var.dns_prefix}"
-
-  # kubernetes_version  = "${var.k8s_version}"
+  kubernetes_version  = "${var.k8s_version != "" ? var.k8s_version : var.k8s_default_version}"
 
   linux_profile {
     admin_username = "ubuntu"
@@ -51,12 +50,14 @@ resource "azurerm_kubernetes_cluster" "k8s" {
       key_data = "${var.ssh_public_key}"
     }
   }
+
   network_profile {
     service_cidr       = "10.0.1.0/24"
     dns_service_ip     = "10.0.1.10"
     network_plugin     = "azure"
     docker_bridge_cidr = "172.17.0.1/16"
   }
+
   agent_pool_profile {
     name            = "agentpool"
     count           = "${var.agent_count}"
@@ -65,10 +66,12 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     os_disk_size_gb = 30
     vnet_subnet_id  = "${azurerm_subnet.k8s.id}"
   }
+
   service_principal {
     client_id     = "${var.client_id}"
     client_secret = "${var.client_secret}"
   }
+
   addon_profile {
     oms_agent {
       enabled                    = true
