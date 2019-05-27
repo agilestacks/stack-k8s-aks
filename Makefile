@@ -39,7 +39,7 @@ export ARM_CLIENT_SECRET=$(AZURE_CLIENT_SECRET)
 export ARM_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
 export ARM_TENANT_ID=$(AZURE_TENANT_ID)
 
-deploy: k8sversion init plan apply createsa token output
+deploy: init plan apply createsa token output
 
 k8sversion:
 	$(eval K8S_LATEST_VERSION=$(shell $(az) aks get-versions  \
@@ -55,7 +55,7 @@ init:
 		-backend-config="key=$(DOMAIN_NAME)/$(COMPONENT_NAME)/terraform.tfstate"
 .PHONY: init
 
-plan:
+plan: k8sversion
 	$(terraform) plan $(TF_CLI_ARGS) \
 	-var dns_prefix=$${DOMAIN_NAME//./} \
 	-var k8s_default_version=$(K8S_LATEST_VERSION) \
