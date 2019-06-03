@@ -32,6 +32,8 @@ parameters:
     env: DOMAIN_NAME
   - name: cloud.region
     env: TF_VAR_location
+  - name: cloud.sshKey
+    env: TF_VAR_ssh_public_key
   - name: cloud.azureResourceGroupName
     env: TF_VAR_resource_group_name
 
@@ -58,8 +60,6 @@ parameters:
       - name: version
         env: TF_VAR_k8s_version
         empty: allow
-      - name: agentSshPubKey
-        env: TF_VAR_ssh_public_key
       - name: virtualNodes
         env: TF_VAR_virtual_nodes
 
