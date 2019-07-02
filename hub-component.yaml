@@ -42,9 +42,6 @@ parameters:
   - name: terraform.bucket.region
     env: STATE_REGION
 
-  - name: component.traefik.helm.timeout
-    value: 30
-
   - name: component.kubernetes
     parameters:
     - name: serviceaccount
@@ -85,8 +82,6 @@ outputs:
     fromTfVar: api_ca_crt
   - name: kubernetes.api.token
     fromTfVar: token
-  - name: component.traefik.helm.timeout
-
 
 
 
