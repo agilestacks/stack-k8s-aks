@@ -5,7 +5,7 @@ meta:
   name: stack-k8s-aks
   brief: Azure AKS
   source:
-      dir: ../../stack-k8s-aks/
+      dir: ../stack-k8s-aks/
 
 requires:
   - azure
@@ -19,15 +19,14 @@ lifecycle:
   readyConditions:
     - dns: ${kubernetes.api.endpoint}
       url: https://${kubernetes.api.endpoint}
+  options:
+    random:
+      bytes: 2048
 
 parameters:
-  - name: cloud.kind
-    value: azure
   - name: kubernetes.aks.cluster
     env: CLUSTER_NAME
     value: ${dns.name}
-  - name: kubernetes.flavor
-    value: aks
   - name: dns.domain
     env: DOMAIN_NAME
   - name: cloud.region
@@ -65,13 +64,18 @@ parameters:
 
 outputs:
   - name: cloud.kind
+    value: azure
   - name: cloud.region
+  - name: cloud.availabilityZone
+    value: 1
   - name: dns.domain
   - name: dns.name
     fromTfVar: dns_name
   - name: dns.baseDomain
     fromTfVar: dns_base_domain
+  - name: kubernetes.aks.cluster
   - name: kubernetes.flavor
+    value: aks
   - name: kubernetes.api.host
     fromTfVar: fqdn
   - name: kubernetes.api.port
@@ -81,9 +85,4 @@ outputs:
   - name: kubernetes.api.caCert
     fromTfVar: api_ca_crt
   - name: kubernetes.api.token
-    fromTfVar: token
-
-
-
-
-
+    fromTfVar: token/base64

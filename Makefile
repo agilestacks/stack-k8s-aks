@@ -1,15 +1,13 @@
-SHELL := /bin/bash
 .DEFAULT_GOAL := deploy
 
-DOMAIN_NAME    ?= superaks.azure.dev.superhub.io
+DOMAIN_NAME    ?= superaks.azure.superhub.io
 COMPONENT_NAME ?= stack-k8s-aks
 
 NAME           := $(shell echo $(DOMAIN_NAME) | cut -d. -f1)
 BASE_DOMAIN    := $(shell echo $(DOMAIN_NAME) | cut -d. -f2-)
 
+STATE_BUCKET ?= azuresuperhubio
 STATE_CONTAINER ?= agilestacks
-STATE_BUCKET ?= azure.dev.superhub.io
-STATE_REGION ?= not-used
 
 export TF_VAR_client_id := $(AZURE_CLIENT_ID)
 export TF_VAR_client_secret := $(AZURE_CLIENT_SECRET)
@@ -30,14 +28,14 @@ export TF_LOG_PATH ?= $(TF_DATA_DIR)/terraform.log
 TF_CLI_ARGS := -no-color -input=false -lock=false
 TFPLAN := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 
-terraform   ?= terraform-v0.11
+terraform ?= terraform-v0.11
 az ?= az
 kubectl ?= kubectl
 
-export ARM_CLIENT_ID=$(AZURE_CLIENT_ID)
-export ARM_CLIENT_SECRET=$(AZURE_CLIENT_SECRET)
-export ARM_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID)
-export ARM_TENANT_ID=$(AZURE_TENANT_ID)
+export ARM_CLIENT_ID ?= $(AZURE_CLIENT_ID)
+export ARM_CLIENT_SECRET ?= $(AZURE_CLIENT_SECRET)
+export ARM_SUBSCRIPTION_ID ?= $(AZURE_SUBSCRIPTION_ID)
+export ARM_TENANT_ID ?= $(AZURE_TENANT_ID)
 
 deploy: init plan apply createsa token output
 
@@ -57,10 +55,10 @@ init:
 
 plan: k8sversion
 	$(terraform) plan $(TF_CLI_ARGS) \
-	-var dns_prefix=$${DOMAIN_NAME//./} \
-	-var k8s_default_version=$(K8S_LATEST_VERSION) \
-	-var log_analytics_workspace_name=$${DOMAIN_NAME//./}-ws \
-	-refresh=true -module-depth=-1 -out=$(TFPLAN)
+		-var dns_prefix=$${DOMAIN_NAME//./} \
+		-var k8s_default_version=$(K8S_LATEST_VERSION) \
+		-var log_analytics_workspace_name=$${DOMAIN_NAME//./}-ws \
+		-refresh=true -module-depth=-1 -out=$(TFPLAN)
 .PHONY: plan
 
 apply:
@@ -72,21 +70,18 @@ context:
 .PHONY: context
 
 createsa: context
-	@if $(kubectl) get -n default serviceaccount $(SERVICE_ACCOUNT) ; then \
-		echo "Service Account $(SERVICE_ACCOUNT) exists"; \
-	else \
-		$(kubectl) create -n default serviceaccount $(SERVICE_ACCOUNT); \
-		$(kubectl) create clusterrolebinding $(SERVICE_ACCOUNT)-cluster-admin-binding \
-			--clusterrole=cluster-admin --serviceaccount=default:$(SERVICE_ACCOUNT); \
-	fi
+	$(kubectl) get -n default serviceaccount $(SERVICE_ACCOUNT) || \
+		($(kubectl) create -n default serviceaccount $(SERVICE_ACCOUNT) && sleep 7)
+	$(kubectl) get clusterrolebinding $(SERVICE_ACCOUNT)-cluster-admin-binding || \
+		($(kubectl) create clusterrolebinding $(SERVICE_ACCOUNT)-cluster-admin-binding \
+			--clusterrole=cluster-admin --serviceaccount=default:$(SERVICE_ACCOUNT) && sleep 7)
 .PHONY: createsa
 
 token:
-	$(eval SECRET=$(shell $(kubectl) get serviceaccount $(SERVICE_ACCOUNT) -o json | \
-		jq '.secrets[] | select(.name | contains("token")).name'))
-	$(eval TOKEN_BASE64=$(shell $(kubectl) get secret $(SECRET) -o json | \
-		jq '.data.token'))
-	$(eval TOKEN=$(shell openssl enc -A -base64 -d <<< $(TOKEN_BASE64)))
+	$(eval SECRET:=$(shell $(kubectl) get serviceaccount $(SERVICE_ACCOUNT) -o json | \
+		jq -r '.secrets[] | select(.name | contains("token")).name'))
+	$(eval TOKEN:=$(shell $(kubectl) get secret $(SECRET) -o json | \
+		jq -r '.data.token'))
 .PHONY: token
 
 output:
@@ -94,7 +89,7 @@ output:
 	@echo Outputs:
 	@echo dns_name = $(NAME)
 	@echo dns_base_domain = $(BASE_DOMAIN)
-	@echo token = $(TOKEN)
+	@echo token = $(TOKEN) | $(HUB) util otp
 	@echo
 .PHONY: output
 
