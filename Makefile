@@ -39,6 +39,7 @@ export ARM_TENANT_ID ?= $(AZURE_TENANT_ID)
 
 deploy: init plan apply createsa token output
 
+# TODO only query if version is not supplied
 k8sversion:
 	$(eval K8S_LATEST_VERSION=$(shell $(az) aks get-versions  \
 		--location $(TF_VAR_location) | jq '.orchestrators[-1].orchestratorVersion'))
