@@ -5,7 +5,7 @@ COMPONENT_NAME ?= stack-k8s-aks
 
 NAME           := $(shell echo $(DOMAIN_NAME) | cut -d. -f1)
 BASE_DOMAIN    := $(shell echo $(DOMAIN_NAME) | cut -d. -f2-)
-NAME2          := $(shell echo $(DOMAIN_NAME) | sed -E -e 's/[^[:alnum:]]+/-/g' | cut -c1-31)
+NAME2          := $(shell echo $(DOMAIN_NAME) | sed -E -e 's/[^[:alnum:]]+/-/g' | cut -c1-31 | sed -e 's/-$$//')
 
 STATE_BUCKET ?= azuresuperhubio
 STATE_CONTAINER ?= agilestacks
