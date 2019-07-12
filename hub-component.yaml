@@ -24,9 +24,6 @@ lifecycle:
       bytes: 2048
 
 parameters:
-  - name: kubernetes.aks.cluster
-    env: CLUSTER_NAME
-    value: ${dns.name}
   - name: dns.domain
     env: DOMAIN_NAME
   - name: cloud.region
@@ -48,6 +45,9 @@ parameters:
       env: SERVICE_ACCOUNT
     - name: aks
       parameters:
+      - name: cluster
+        empty: allow
+        env: CLUSTER_NAME
       - name: agentCount
         env: TF_VAR_agent_count
       - name: agentVmSize
@@ -73,7 +73,6 @@ outputs:
     fromTfVar: dns_name
   - name: dns.baseDomain
     fromTfVar: dns_base_domain
-  - name: kubernetes.aks.cluster
   - name: kubernetes.flavor
     value: aks
   - name: kubernetes.api.host
@@ -86,3 +85,5 @@ outputs:
     fromTfVar: api_ca_crt
   - name: kubernetes.api.token
     fromTfVar: token/base64
+  - name: kubernetes.aks.cluster
+    fromTfVar: cluster_name

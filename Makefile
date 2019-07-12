@@ -5,6 +5,7 @@ COMPONENT_NAME ?= stack-k8s-aks
 
 NAME           := $(shell echo $(DOMAIN_NAME) | cut -d. -f1)
 BASE_DOMAIN    := $(shell echo $(DOMAIN_NAME) | cut -d. -f2-)
+NAME2          := $(shell echo $(DOMAIN_NAME) | sed -E -e 's/[^[:alnum:]]+/-/g' | cut -c1-31)
 
 STATE_BUCKET ?= azuresuperhubio
 STATE_CONTAINER ?= agilestacks
@@ -19,7 +20,7 @@ export TF_VAR_resource_group_name ?= SuperHub
 export TF_VAR_location ?= eastus
 export TF_VAR_log_analytics_workspace_location ?= eastus
 export TF_VAR_base_domain := $(BASE_DOMAIN)
-export TF_VAR_cluster_name := $(CLUSTER_NAME)
+export TF_VAR_cluster_name := $(or $(CLUSTER_NAME),$(NAME2))
 export TF_VAR_name := $(NAME)
 
 export TF_LOG      ?= info
@@ -90,6 +91,7 @@ output:
 	@echo Outputs:
 	@echo dns_name = $(NAME)
 	@echo dns_base_domain = $(BASE_DOMAIN)
+	@echo cluster_name = $(TF_VAR_cluster_name)
 	@echo token = $(TOKEN) | $(HUB) util otp
 	@echo
 .PHONY: output
