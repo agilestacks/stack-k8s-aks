@@ -36,6 +36,22 @@ resource "azurerm_subnet" "k8s" {
   address_prefix       = "10.0.2.0/24"
 }
 
+resource "azurerm_subnet" "virtual_nodes" {
+  name                 = "${var.cluster_name}-vn-subnet"
+  resource_group_name  = "${data.azurerm_resource_group.k8s.name}"
+  virtual_network_name = "${azurerm_virtual_network.k8s.name}"
+  address_prefix       = "10.0.3.0/24"
+
+  delegation {
+    name = "aciDelegation"
+
+    service_delegation {
+      name    = "Microsoft.ContainerInstance/containerGroups"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+    }
+  }
+}
+
 resource "azurerm_kubernetes_cluster" "k8s" {
   name                = "${var.cluster_name}"
   location            = "${var.location}"
@@ -80,7 +96,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
 
     aci_connector_linux {
       enabled     = "${var.virtual_nodes}"
-      subnet_name = "${azurerm_subnet.k8s.name}"
+      subnet_name = "${azurerm_subnet.virtual_nodes.name}"
     }
   }
 }
