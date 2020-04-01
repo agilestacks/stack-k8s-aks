@@ -23,13 +23,13 @@ export TF_VAR_base_domain := $(BASE_DOMAIN)
 export TF_VAR_cluster_name := $(or $(CLUSTER_NAME),$(NAME2))
 export TF_VAR_name := $(NAME)
 
-export TF_LOG      ?= info
+export TF_LOG      ?=
 export TF_DATA_DIR ?= .terraform/$(DOMAIN_NAME)
 export TF_LOG_PATH ?= $(TF_DATA_DIR)/terraform.log
 TF_CLI_ARGS := -no-color -input=false -lock=false
 TFPLAN := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 
-terraform ?= terraform-v0.11
+terraform ?= terraform-v0.12
 az ?= az
 kubectl ?= kubectl
 
@@ -59,8 +59,7 @@ plan: k8sversion
 	$(terraform) plan $(TF_CLI_ARGS) \
 		-var dns_prefix=$${DOMAIN_NAME//./} \
 		-var k8s_default_version=$(K8S_LATEST_VERSION) \
-		-var log_analytics_workspace_name=$${DOMAIN_NAME//./}-ws \
-		-refresh=true -module-depth=-1 -out=$(TFPLAN)
+		-refresh=true -out=$(TFPLAN)
 .PHONY: plan
 
 apply:

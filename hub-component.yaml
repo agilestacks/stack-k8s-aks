@@ -53,9 +53,6 @@ parameters:
       - name: agentVmSize
         env: TF_VAR_agent_vm_size
         value: Standard_DS1_v2
-      - name: agentVmOs
-        env: TF_VAR_agent_vm_os
-        value: Linux
       - name: version
         env: TF_VAR_k8s_version
         empty: allow
