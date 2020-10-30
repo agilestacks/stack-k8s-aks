@@ -8,6 +8,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "spot" {
   vm_size         = var.agent_vm_size
   os_disk_size_gb = 30
   vnet_subnet_id  = azurerm_subnet.k8s.id
+  max_pods        = 50
 
   priority            = "Spot"
   spot_max_price      = var.spot_agent_price

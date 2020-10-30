@@ -6,21 +6,21 @@ resource "azurerm_virtual_network" "k8s" {
   name                = "${var.cluster_name}-vnet"
   location            = var.location
   resource_group_name = data.azurerm_resource_group.k8s.name
-  address_space       = ["10.0.0.0/16"]
+  address_space       = ["10.0.0.0/8"]
 }
 
 resource "azurerm_subnet" "k8s" {
   name                 = "${var.cluster_name}-default-subnet"
   resource_group_name  = data.azurerm_resource_group.k8s.name
   virtual_network_name = azurerm_virtual_network.k8s.name
-  address_prefixes     = ["10.0.2.0/24"]
+  address_prefixes     = ["10.2.0.0/16"]
 }
 
 resource "azurerm_subnet" "virtual_nodes" {
   name                 = "${var.cluster_name}-vn-subnet"
   resource_group_name  = data.azurerm_resource_group.k8s.name
   virtual_network_name = azurerm_virtual_network.k8s.name
-  address_prefixes     = ["10.0.3.0/24"]
+  address_prefixes     = ["10.3.0.0/16"]
 
   delegation {
     name = "aciDelegation"
@@ -60,6 +60,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     vm_size         = var.agent_vm_size
     os_disk_size_gb = 30
     vnet_subnet_id  = azurerm_subnet.k8s.id
+    max_pods        = 50
   }
 
   service_principal {
