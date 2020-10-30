@@ -13,41 +13,51 @@ STATE_CONTAINER ?= agilestacks
 export TF_VAR_client_id := $(AZURE_CLIENT_ID)
 export TF_VAR_client_secret := $(AZURE_CLIENT_SECRET)
 
-export TF_VAR_agent_count ?= 2
 export TF_VAR_agent_vm_size ?= Standard_DS1_v2
 export TF_VAR_agent_vm_os ?= Linux
 export TF_VAR_resource_group_name ?= SuperHub
 export TF_VAR_location ?= eastus
-export TF_VAR_log_analytics_workspace_location ?= eastus
 export TF_VAR_base_domain := $(BASE_DOMAIN)
 export TF_VAR_cluster_name := $(or $(CLUSTER_NAME),$(NAME2))
 export TF_VAR_name := $(NAME)
 
-export TF_LOG      ?=
+az        ?= az
+terraform ?= terraform-v0.12
+kubectl   ?= kubectl
+
+AKS_DEFAULT_VERSION = $(shell $(az) aks get-versions  --location $(TF_VAR_location) | \
+	jq -r '.orchestrators[] | select(.default == true) | .orchestratorVersion')
+export TF_VAR_k8s_version := $(or $(AKS_VERSION),$(AKS_DEFAULT_VERSION))
+
+# create spot node pool if price is set and at least 2 workers; one worker must be in default node pool
+WORKER_IMPL := $(if $(and $(TF_VAR_spot_agent_price),$(shell test $(AGENT_COUNT) -gt 1 && echo true)),spot,ondemand)
+ifeq (spot,$(WORKER_IMPL))
+export TF_VAR_agent_count := 1
+export TF_VAR_spot_agent_count := $(shell expr $(AGENT_COUNT) - 1)
+else
+export TF_VAR_agent_count := $(AGENT_COUNT)
+endif
+
 export TF_DATA_DIR ?= .terraform/$(DOMAIN_NAME)
 export TF_LOG_PATH ?= $(TF_DATA_DIR)/terraform.log
-TF_CLI_ARGS := -no-color -input=false -lock=false
-TFPLAN := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 
-terraform ?= terraform-v0.12
-az ?= az
-kubectl ?= kubectl
+TF_CLI_ARGS := -input=false
+TFPLAN      := $(TF_DATA_DIR)/$(DOMAIN_NAME).tfplan
 
-export ARM_CLIENT_ID ?= $(AZURE_CLIENT_ID)
-export ARM_CLIENT_SECRET ?= $(AZURE_CLIENT_SECRET)
+export ARM_CLIENT_ID       ?= $(AZURE_CLIENT_ID)
+export ARM_CLIENT_SECRET   ?= $(AZURE_CLIENT_SECRET)
 export ARM_SUBSCRIPTION_ID ?= $(AZURE_SUBSCRIPTION_ID)
-export ARM_TENANT_ID ?= $(AZURE_TENANT_ID)
+export ARM_TENANT_ID       ?= $(AZURE_TENANT_ID)
 
-deploy: init plan apply createsa token output
-
-# TODO only query if version is not supplied
-k8sversion:
-	$(eval K8S_LATEST_VERSION=$(shell $(az) aks get-versions \
-		--location $(TF_VAR_location) | jq '.orchestrators[] | select(.default == true) | .orchestratorVersion'))
-.PHONY: k8sversion
+deploy: init plan apply createsa token
+ifeq (spot,$(WORKER_IMPL))
+deploy: untaint
+endif
+deploy: output
 
 init:
 	@mkdir -p $(TF_DATA_DIR)
+	@if test "$(WORKER_IMPL)" = spot; then cp -v fragments/aks-worker-$(WORKER_IMPL).tf .; else rm -f aks-worker-$(WORKER_IMPL).tf; fi
 	$(terraform) init -get=true $(TF_CLI_ARGS) -reconfigure -force-copy \
 		-backend-config="storage_account_name=$${STATE_BUCKET//./}" \
 		-backend-config="container_name=$(STATE_CONTAINER)" \
@@ -55,10 +65,9 @@ init:
 		-backend-config="key=$(DOMAIN_NAME)/$(COMPONENT_NAME)/terraform.tfstate"
 .PHONY: init
 
-plan: k8sversion
+plan:
 	$(terraform) plan $(TF_CLI_ARGS) \
 		-var dns_prefix=$${DOMAIN_NAME//./} \
-		-var k8s_default_version=$(K8S_LATEST_VERSION) \
 		-refresh=true -out=$(TFPLAN)
 .PHONY: plan
 
@@ -85,6 +94,11 @@ token:
 	$(eval TOKEN:=$(shell $(kubectl) -n default get secret $(SECRET) -o json | \
 		jq -r '.data.token'))
 .PHONY: token
+
+# https://github.com/Azure/AKS/issues/1719
+untaint:
+	$(kubectl) apply -f spot-node-untaint.yaml
+.PHONY: untaint
 
 output:
 	@echo

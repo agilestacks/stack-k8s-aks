@@ -37,7 +37,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   location            = var.location
   resource_group_name = data.azurerm_resource_group.k8s.name
   dns_prefix          = var.dns_prefix
-  kubernetes_version  = coalesce(var.k8s_version, var.k8s_default_version)
+  kubernetes_version  = var.k8s_version
 
   linux_profile {
     admin_username = "ubuntu"
@@ -55,7 +55,7 @@ resource "azurerm_kubernetes_cluster" "k8s" {
   }
 
   default_node_pool {
-    name            = "agentpool"
+    name            = "default"
     node_count      = var.agent_count
     vm_size         = var.agent_vm_size
     os_disk_size_gb = 30
@@ -79,11 +79,4 @@ resource "azurerm_kubernetes_cluster" "k8s" {
       windows_profile
     ]
   }
-}
-
-resource "local_file" "cluster_ca_certificate" {
-  content = base64decode(
-    azurerm_kubernetes_cluster.k8s.kube_config[0].cluster_ca_certificate,
-  )
-  filename = "${path.cwd}/.terraform/${var.name}.${var.base_domain}/cluster_ca_certificate.pem"
 }

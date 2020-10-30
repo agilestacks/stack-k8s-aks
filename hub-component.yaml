@@ -50,12 +50,15 @@ parameters:
         empty: allow
         env: CLUSTER_NAME
       - name: agentCount
-        env: TF_VAR_agent_count
+        env: AGENT_COUNT
+      - name: spotPrice
+        env: TF_VAR_spot_agent_price
+        empty: allow
       - name: agentVmSize
         env: TF_VAR_agent_vm_size
         value: Standard_DS1_v2
       - name: version
-        env: TF_VAR_k8s_version
+        env: AKS_VERSION
         value: 1.17
       - name: virtualNodes
         env: TF_VAR_virtual_nodes
