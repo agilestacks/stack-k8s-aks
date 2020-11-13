@@ -63,10 +63,14 @@ resource "azurerm_kubernetes_cluster" "k8s" {
     max_pods        = 50
   }
 
-  service_principal {
-    client_id     = var.client_id
-    client_secret = var.client_secret
+  # https://docs.microsoft.com/en-us/azure/aks/use-managed-identity
+  identity {
+    type = "SystemAssigned"
   }
+  # service_principal {
+  #   client_id     = var.client_id
+  #   client_secret = var.client_secret
+  # }
 
   addon_profile {
     aci_connector_linux {
